@@ -1,10 +1,34 @@
+import argparse
 import cv2
 import numpy
 import sys
 
 testing = False
 
-ruler_color = [120, 120, 120]
+# TODO:
+# add more command line arguments.
+# add a way to output the image at different parts of the pipeline so users can see how to set the options. 
+
+#
+# MAIN 
+# 
+
+parser = argparse.ArgumentParser(description='Automatically detect rulers in digitized page images and crop them out.')
+parser.add_argument('--red', '-r', type=int, nargs='?')
+parser.add_argument('--green', '-g', type=int, nargs='?')
+parser.add_argument('--blue', '-b', type=int, nargs='?')
+parser.add_argument('--grayvariation', '-v', type=int, nargs='?')
+parser.add_argument('inputfile')
+parser.add_argument('outputfile')
+
+args = parser.parse_args()
+
+ruler_color = [args.red or 120, args.green or 120, args.blue or 120]
+grayvariation = args.grayvariation or 10
+
+inputfile = args.inputfile
+outputfile = args.outputfile
+
 morph_open_kernel = numpy.ones((5, 5), numpy.uint8)
 morph_close_kernel = numpy.ones((20, 20), numpy.uint8)
 border_width = 100
@@ -12,17 +36,12 @@ nudge_crop_in = 10
 test_color = (255, 0, 0)
 test_width = 20
 
-if len(sys.argv) < 3:
-    print(sys.argv[0])
-    print("A program to automatically detect rulers in digitized page images and crop them out.")
-    sys.exit()
-
 # load image.
-img = cv2.imread(sys.argv[1])
+img = cv2.imread(inputfile)
 
 # the color bar is gray- so select the gray things only.
-lower_limit_for_gray = numpy.array([ruler_color[0] - 10, ruler_color[1] - 10, ruler_color[2] - 10], dtype = "uint8")
-upper_limit_for_gray = numpy.array([ruler_color[0] + 10, ruler_color[1] + 10, ruler_color[2] + 10], dtype = "uint8")
+lower_limit_for_gray = numpy.array([ruler_color[0] - grayvariation, ruler_color[1] - grayvariation, ruler_color[2] - grayvariation], dtype = numpy.uint8)
+upper_limit_for_gray = numpy.array([ruler_color[0] + grayvariation, ruler_color[1] + grayvariation, ruler_color[2] + grayvariation], dtype = numpy.uint8)
 gray_only = cv2.inRange(img, lower_limit_for_gray, upper_limit_for_gray)
 
 # remove noise: despeckle.
@@ -38,7 +57,7 @@ gray_only = cv2.copyMakeBorder(gray_only, border_width, border_width, border_wid
 ret, threshold = cv2.threshold(gray_only, 127, 255, cv2.THRESH_BINARY)
 
 # get countours.
-im2, contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 ruler = None
 
@@ -76,11 +95,11 @@ if ruler is not None:
 
     # output an image with test lines only, or output a cropped image. 
     if testing:
-        cv2.imwrite(sys.argv[2], img)
+        cv2.imwrite(outputfile, img)
     else:
         # crop the ruler out of the left or right side of the image.
         if x < width / 2:
-            cv2.imwrite(sys.argv[2], img[0:height, x + nudge_crop_in:width])
+            cv2.imwrite(outputfile, img[0:height, x + nudge_crop_in:width])
         else:
-            cv2.imwrite(sys.argv[2], img[0:height, 0:x - nudge_crop_in])
+            cv2.imwrite(outputfile, img[0:height, 0:x - nudge_crop_in])
 
