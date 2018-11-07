@@ -104,10 +104,10 @@ if __name__ == '__main__':
 
     testing = False
 
-    if not (os.path.isdir('/tmp/in') and os.path.isdir('/tmp/out')):
-        print('This script requires files in two directories: /tmp/in should')
+    if not (os.path.isdir('/mnt/in') and os.path.isdir('/mnt/out')):
+        print('This script requires files in two directories: /mnt/in should')
         print('contain original files. The script will place cropped versions')
-        print('of those files in /tmp/out. If you\'re running this script inside')
+        print('of those files in /mnt/out. If you\'re running this script inside')
         print('a docker container, you should create bind mounts from your')
         print('local filesystem to the docker container with the -v option of')
         print('docker run.')
@@ -146,14 +146,14 @@ if __name__ == '__main__':
         else:
             args[a] = int(args[a])
 
-    for f in os.listdir('/tmp/in'):
-        if os.path.isfile('/tmp/out/{}'.format(os.path.basename(f))):
+    for f in os.listdir('/mnt/in'):
+        if os.path.isfile('/mnt/out/{}'.format(os.path.basename(f))):
             print('Skipping {} (file exists in output directory)'.format(f))
         else:
             try:
                 crop_out_ruler(
-                    '/tmp/in/{}'.format(f),
-                    '/tmp/out/{}'.format(f),
+                    '/mnt/in/{}'.format(f),
+                    '/mnt/out/{}'.format(f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
