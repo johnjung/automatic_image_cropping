@@ -146,7 +146,9 @@ if __name__ == '__main__':
 	       variance. E.g.  specifying the defaults, red=120, green=120, and
 	       blue=120, with a variance of 10, will detect and crop out rulers
 	       whose color is anywhere between 110,110,110 and 130,130,130.'''
-    print(textwrap.wrap(intro, width=70))
+
+    for s in textwrap.wrap(intro, width=70):
+        print(s)
     print('')
 
     defaults = {
@@ -177,15 +179,12 @@ if __name__ == '__main__':
             print('Skipping {} (file exists in output directory)'.format(f))
         else:
             try:
-                '''
                 crop_out_ruler(
                     '/mnt/pres/{}/Masters/{}'.format(directory, f),
                     '/mnt/pres/{}/Tiff Crop/{}'.format(directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
-                '''
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
                 continue
-            print('Cropped {}'.format(f))
