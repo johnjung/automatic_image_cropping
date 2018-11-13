@@ -117,7 +117,7 @@ if __name__ == '__main__':
     username = input('Username: ')
     domain = input('Domain, e.g. ad, adlocal: ')
     password = getpass.getpass('Password: ')
-    call(['mount', '-t', 'cifs', '//monsoon.lib.uchicago.edu/pres', '/mnt/pres', '-o', 'user={},pass={},dom={}'.format(username, domain, password)])
+    call(['mount', '-t', 'cifs', '//monsoon.lib.uchicago.edu/pres', '/mnt/pres', '-o', 'user={},pass={},dom={}'.format(username, password, domain)])
 
     tries = 0
     while True:
