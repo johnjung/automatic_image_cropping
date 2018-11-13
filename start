@@ -1,5 +1,7 @@
+#!/usr/local/bin/python
+
 """Usage:
-   crop_out_ruler.py [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>]
+   start [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>]
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,10 +18,13 @@
 """
 
 from docopt import docopt
+from subprocess import call
 import cv2
+import getpass
 import numpy
 import os
 import sys
+import textwrap
 
 def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation):
     morph_open_kernel = numpy.ones((5, 5), numpy.uint8)
@@ -104,15 +109,28 @@ if __name__ == '__main__':
 
     testing = False
 
-    if not (os.path.isdir('/mnt/in') and os.path.isdir('/mnt/out')):
-        print('This script requires files in two directories: /mnt/in should')
-        print('contain original files. The script will place cropped versions')
-        print('of those files in /mnt/out. If you\'re running this script inside')
-        print('a docker container, you should create bind mounts from your')
-        print('local filesystem to the docker container with the -v option of')
-        print('docker run.')
-        input('Press Enter to continue.')
-        sys.exit()
+    print('Welcome to the preservation cropping script.')
+    print('')
+
+    print('Establish a Samba connection to monsoon.lib.uchicago.edu:')
+    print('')
+    username = input('Username: ')
+    domain = input('Domain (e.g. ad, adlocal)')
+    password = getpass.getpass('Password: ')
+    call(['mount', '-t', 'cifs', '//monsoon.lib.uchicago.edu/pres', '/mnt/pres'])
+
+    directory = input('Enter the path to a directory to crop (e.g., EWM/ewm-0054): ')
+    print('')
+
+    intro = '''For every image in a directory, this program crops a ruler out
+	       of each image and saves an image in an output directory. Specify
+	       the color of the ruler by entering an amount for the red, green
+	       and blue channels. Then, specify an amount of variance. E.g.
+	       specifying the defaults, red=120, green=120, and blue=120, with
+	       a variance of 10, will detect and crop out rulers whose color is
+               anywhere between 110,110,110 and 130,130,130.'''
+    print(textwrap.wrap(intro, width=70))
+    print('')
 
     defaults = {
         '--red': 120,
@@ -120,15 +138,6 @@ if __name__ == '__main__':
         '--blue': 120,
         '--grayvariation': 10
     }
-
-    print('For every image in a directory, this script crops a ruler out of')
-    print('each image and saves an image in an output directory. Specify the')
-    print('color of the ruler by entering an amount for the red, green and blue')
-    print('channels. Then, specify an amount of variance. E.g. specifying the')
-    print('defaults, red=120, green=120, and blue=120, with a variance of 10,')
-    print('will detect and crop out rulers whose color is anywhere between')
-    print('110,110,110 and 130,130,130.')
-    print('')
 
     input_descriptions = {
         '--red': 'Enter the red channel amount, from 0 - 255. Default {}: '.format(defaults['--red']),

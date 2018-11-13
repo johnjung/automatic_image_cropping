@@ -13,8 +13,8 @@ vision library OpenCV.
 ## Quickstart
 
 ```
-docker build -t opencv_cropping https://github.com/johnjung/opencv_cropping.git
-docker run -it -v /local_input_directory:/mnt/in -v /local_output_directory:/mnt/out opencv_cropping python crop_out_ruler.py
+docker build -t crop https://github.com/johnjung/opencv_cropping.git
+docker run --rm -it --cap-add=SYS_ADMIN --cap-add=DAC_READ_SEARCH crop start
 ```
 
 ## Contributing
