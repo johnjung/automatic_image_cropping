@@ -8,4 +8,5 @@ RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 COPY start start
 RUN chmod u+x start
+RUN export PATH=$PATH:/
 RUN mkdir /mnt/pres
