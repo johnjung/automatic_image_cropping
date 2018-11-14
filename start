@@ -26,7 +26,7 @@ import os
 import sys
 import textwrap
 
-def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation):
+def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation, verbose=False):
     morph_open_kernel = numpy.ones((5, 5), numpy.uint8)
     morph_close_kernel = numpy.ones((20, 20), numpy.uint8)
     border_width = 100
@@ -34,34 +34,44 @@ def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation):
     test_color = (255, 0, 0)
     test_width = 20
     
-    # load image.
+    if verbose:
+        print('loading {}'.format(inputfile))
     img = cv2.imread(inputfile)
+    if img is None:
+        raise ValueError
     if not img.any():
         raise ValueError
     
-    # the color bar is gray- so select the gray things only.
+    if verbose:
+        print('selecting gray objects.')
     lower_limit_for_gray = numpy.array([ruler_color[0] - grayvariation, ruler_color[1] - grayvariation, ruler_color[2] - grayvariation], dtype = numpy.uint8)
     upper_limit_for_gray = numpy.array([ruler_color[0] + grayvariation, ruler_color[1] + grayvariation, ruler_color[2] + grayvariation], dtype = numpy.uint8)
     gray_only = cv2.inRange(img, lower_limit_for_gray, upper_limit_for_gray)
     
-    # remove noise: despeckle.
+    if verbose:
+        print('despeckling to remove noise.')
     gray_only = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, morph_open_kernel)
     
-    # remove noise: fill in gaps. 
+    if verbose:
+        print('filling in gaps to remove noise.')
     gray_only = cv2.morphologyEx(gray_only, cv2.MORPH_CLOSE, morph_close_kernel)
     
-    # add a border.
+    if verbose:
+        print('adding a border.')
     gray_only = cv2.copyMakeBorder(gray_only, border_width, border_width, border_width, border_width, cv2.BORDER_CONSTANT, value=[0, 0, 0])
     
-    # get a bitonal image. 
+    if verbose:
+        print('getting a bitonal image.')
     ret, threshold = cv2.threshold(gray_only, 127, 255, cv2.THRESH_BINARY)
     
-    # get countours.
+    if verbose:
+        print('getting contours.')
     _, contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     ruler = None
     
-    # find the biggest contour with four sides- assume it's the ruler. 
+    if verbose:
+        print('find the largest countour with four sides- assume it is the ruler.')    
     contours = sorted(contours, key = cv2.contourArea, reverse = True)[:10]
     for c in contours:
         peri = cv2.arcLength(c, True)
@@ -71,33 +81,38 @@ def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation):
             ruler = numpy.array(list(map(lambda c: [[c[0][0] - border_width, c[0][1] - border_width]], approx)))
             break
     
-    # if we found a ruler...
     if ruler is not None:
+        if verbose:
+            print('found ruler.')
         # draw a box around it. 
         if testing:
             cv2.drawContours(img, [ruler], -1, test_color, test_width)
     
-        # get the x coordinates of all points in the ruler. 
-        # sort them so that the one that is closest to the center of the image is first.
+        if verbose:
+            print('get x coordinates of all points in ruler, sort so the one closes to the center of the image is first.')
         height, width, channels = img.shape
         points_x_coordinates = list(map(lambda c: c[0][0], ruler.tolist()))
         points_x_coordinates = list(sorted(points_x_coordinates, key=lambda x: abs(width - x)))
     
-        # get the lowest or highest coordinate depending on which side of the page the ruler is on.
+        if verbose:
+            print('get the lowest or highest coordinate depending on which side of the page the ruler is on.')
         if points_x_coordinates[0] > width / 2:
             x = points_x_coordinates[-1]
         else:
             x = points_x_coordinates[0]
     
-        # draw a line there. 
         if testing:
+            if verbose:
+                print('testing mode: draw a line.')
             cv2.line(img, (x, 0), (x, height), test_color, test_width)
-    
-        # output an image with test lines only, or output a cropped image. 
+   
         if testing:
+            if verbose: 
+                print('output an image with test lines only.')
             cv2.imwrite(outputfile, img)
         else:
-            # crop the ruler out of the left or right side of the image.
+            if verbose:
+                print('crop the ruler out of the left or right side of the image.')
             if x < width / 2:
                 cv2.imwrite(outputfile, img[0:height, x + nudge_crop_in:width])
             else:
@@ -150,6 +165,8 @@ if __name__ == '__main__':
 
     testing = False
 
+    verbose = True
+
     for f in os.listdir(input_directory):
         if not os.path.isfile('{}/{}'.format(output_directory, f)):
             try:
@@ -158,8 +175,10 @@ if __name__ == '__main__':
                     '{}/{}'.format(input_directory, f),
                     '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
-                    args['--grayvariation']
+                    args['--grayvariation'],
+                    verbose
                 )
+                sys.exit()
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
                 continue
