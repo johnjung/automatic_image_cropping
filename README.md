@@ -14,7 +14,7 @@ vision library OpenCV.
 
 ```
 docker build -t crop https://github.com/johnjung/opencv_cropping.git
-docker run --rm -it --cap-add=SYS_ADMIN --cap-add=DAC_READ_SEARCH crop start
+docker run --rm -it --cap-add=SYS_ADMIN --cap-add=DAC_READ_SEARCH --env-file=envfile crop start
 ```
 
 ## Contributing

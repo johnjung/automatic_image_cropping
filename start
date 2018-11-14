@@ -136,29 +136,34 @@ if __name__ == '__main__':
         'user={},pass={},dom={}'.format(args['--username'], args['--password'], args['--domain'])
     ])
 
-    if os.path.isdir('/mnt/pres/{}/Tiff Crop'):
-        print('exists')
+    d = '/mnt/pres/{}/Tiff Crop'.format(args['--directory'])
+    if os.path.isdir(d):
+        print(d + ' exists')
     else:
-        print('does not exist')
+        print(d + ' does not exist')
     sys.exit()
 
-    if not os.path.isdir('/mnt/pres/{}/Masters'.format(args['--directory'])):
-        print('{}/Masters does not exist.'.format(args['--directory']))
+    input_directory = '/mnt/pres/{}/Masters'.format(args['--directory'])
+    if not os.path.isdir(input_directory):
+        print('input directory {} does not exist.'.format(input_directory))
         sys.exit()
 
-    if not os.path.isdir('/mnt/pres/{}/Tiff Crop'.format(args['--directory'])):
-        os.mkdir('/mnt/pres/{}/Tiff Crop'.format(args['--directory']))
+    output_directory = '/mnt/pres/{}/Tiff Crop'.format(args['--directory'])
+    if not os.path.isdir(output_directory):
+        os.mkdir(output_directory)
 
     testing = False
 
-    for f in os.listdir('/mnt/pres/{}/Masters'.format(args['--directory'])):
-        if os.path.isfile('/mnt/pres/{}/Tiff Crop/{}'.format(args['--directory'], os.path.basename(f))):
+    sys.exit()
+
+    for f in os.listdir(input_directory):
+        if os.path.isfile('{}/{}'.format(output_directory, f)):
             print('Skipping {} (file exists in output directory)'.format(f))
         else:
             try:
                 crop_out_ruler(
-                    '/mnt/pres/{}/Masters/{}'.format(args['--directory'], f),
-                    '/mnt/pres/{}/Tiff Crop/{}'.format(args['--directory'], f),
+                    '{}/{}'.format(input_directory, f),
+                    '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
