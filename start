@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 
 """Usage:
-   start [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>]
+   start [--username=<username>] [--domain=<domain>] [--password=<password>] [--directory=<directory>] [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>]
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -107,81 +107,58 @@ def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation):
 if __name__ == '__main__':
     args = docopt(__doc__)
 
-    testing = False
+    environmental_variables = {
+        '--username':      'PRES_CROP_SMB_USERNAME',
+        '--domain':        'PRES_CROP_SMB_DOMAIN',
+        '--password':      'PRES_CROP_SMB_PASSWORD',
+        '--red':           'PRES_CROP_RED',
+        '--green':         'PRES_CROP_GREEN',
+        '--blue':          'PRES_CROP_BLUE',
+        '--grayvariation': 'PRES_CROP_GRAY_VARIATION',
+        '--directory':     'PRES_CROP_DIRECTORY'
+    }
 
-    print('Welcome to the preservation cropping script.')
-    print('')
-
-    print('Establish a Samba connection to monsoon.lib.uchicago.edu:')
-    print('')
-    username = input('Username: ')
-    domain = input('Domain, e.g. ad, adlocal: ')
-    password = getpass.getpass('Password: ')
-    call(['mount', '-t', 'cifs', '//monsoon.lib.uchicago.edu/pres', '/mnt/pres', '-o', 'user={},pass={},dom={}'.format(username, password, domain)])
-
-    tries = 0
-    while True:
-        directory = input('Enter the path to a directory to crop (e.g., EWM/ewm-0054): ')
-        if os.path.isdir('/mnt/pres/{}'.format(directory)): 
-            break
-        else:
-            print('That path does not exist.')
-            if tries >= 2:
+    for a, v in args.items():
+        if v is None:
+            try:
+                args[a] = os.environ[environmental_variables[a]]
+            except KeyError:
+                print('The {} environmental variable is not set.'.format(environmental_variables[a]))
                 sys.exit()
-            else:
-                tries = tries + 1
-    print('')
 
-    if not os.path.isdir('/mnt/pres/{}/Masters'.format(directory)):
-        print('{}/Masters does not exist.'.format(directory))
+    call([
+        'mount',
+        '-t',
+        'cifs',
+        '//monsoon.lib.uchicago.edu/pres',
+        '/mnt/pres',
+        '-o', 
+        'user={},pass={},dom={}'.format(args['--username'], args['--password'], args['--domain'])
+    ])
+
+    if os.path.isdir('/mnt/pres/{}/Tiff Crop'):
+        print('exists')
+    else:
+        print('does not exist')
+    sys.exit()
+
+    if not os.path.isdir('/mnt/pres/{}/Masters'.format(args['--directory'])):
+        print('{}/Masters does not exist.'.format(args['--directory']))
         sys.exit()
 
-    if not os.path.isdir('/mnt/pres/{}/Tiff Crop'.format(directory)):
-        os.mkdir('/mnt/pres/{}/Tiff Crop'.format(directory))
+    if not os.path.isdir('/mnt/pres/{}/Tiff Crop'.format(args['--directory'])):
+        os.mkdir('/mnt/pres/{}/Tiff Crop'.format(args['--directory']))
 
-    intro = '''For every image in a 'Masters' directory, this program crops a
-	       ruler out of each image and saves an image in a 'Tiff Crop'
-	       directory. Specify the color of the ruler by entering an amount
-	       for the red, green and blue channels. Then, specify an amount of
-	       variance. E.g.  specifying the defaults, red=120, green=120, and
-	       blue=120, with a variance of 10, will detect and crop out rulers
-	       whose color is anywhere between 110,110,110 and 130,130,130.'''
+    testing = False
 
-    for s in textwrap.wrap(intro, width=70):
-        print(s)
-    print('')
-
-    defaults = {
-        '--red': 120,
-        '--green': 120,
-        '--blue': 120,
-        '--grayvariation': 10
-    }
-
-    input_descriptions = {
-        '--red': 'Enter the red channel amount, from 0 - 255. Default {}: '.format(defaults['--red']),
-        '--green': 'Enter the green channel amount, from 0 - 255. Default {}: '.format(defaults['--green']),
-        '--blue': 'Enter the blue channel amount, from 0 - 255. Default {}: '.format(defaults['--blue']),
-        '--grayvariation': 'Enter the acceptable amount of variation, from 0-255. Default {}: '.format(defaults['--grayvariation'])
-    }
-
-    for a in ('--red', '--green', '--blue', '--grayvariation'):
-        if args[a] == None:
-            try:
-                args[a] = int(input(input_descriptions[a]))
-            except ValueError:
-                args[a] = defaults[a]
-        else:
-            args[a] = int(args[a])
-
-    for f in os.listdir('/mnt/pres/{}/Masters'.format(directory)):
-        if os.path.isfile('/mnt/pres/{}/Tiff Crop/{}'.format(directory, os.path.basename(f))):
+    for f in os.listdir('/mnt/pres/{}/Masters'.format(args['--directory'])):
+        if os.path.isfile('/mnt/pres/{}/Tiff Crop/{}'.format(args['--directory'], os.path.basename(f))):
             print('Skipping {} (file exists in output directory)'.format(f))
         else:
             try:
                 crop_out_ruler(
-                    '/mnt/pres/{}/Masters/{}'.format(directory, f),
-                    '/mnt/pres/{}/Tiff Crop/{}'.format(directory, f),
+                    '/mnt/pres/{}/Masters/{}'.format(args['--directory'], f),
+                    '/mnt/pres/{}/Tiff Crop/{}'.format(args['--directory'], f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
