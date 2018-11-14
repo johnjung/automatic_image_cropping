@@ -148,19 +148,15 @@ if __name__ == '__main__':
     testing = False
 
     for f in os.listdir(input_directory):
-        if os.path.isfile('{}/{}'.format(output_directory, f)):
-            print('Skipping {} (file exists in output directory)'.format(f))
-        else:
+        if not os.path.isfile('{}/{}'.format(output_directory, f)):
             try:
-                print('Would have tried to crop {}'.format(f))
-                '''
+                print(f)
                 crop_out_ruler(
                     '{}/{}'.format(input_directory, f),
                     '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
-                '''
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
                 continue
