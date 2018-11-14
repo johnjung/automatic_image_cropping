@@ -182,8 +182,8 @@ if __name__ == '__main__':
                     '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation'],
-                    verbose,
-                    testing
+                    args['--verbose'],
+                    args['--testing']
                 )
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
