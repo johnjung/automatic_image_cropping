@@ -136,13 +136,6 @@ if __name__ == '__main__':
         'user={},pass={},dom={}'.format(args['--username'], args['--password'], args['--domain'])
     ])
 
-    d = '/mnt/pres/{}/Tiff Crop'.format(args['--directory'])
-    if os.path.isdir(d):
-        print(d + ' exists')
-    else:
-        print(d + ' does not exist')
-    sys.exit()
-
     input_directory = '/mnt/pres/{}/Masters'.format(args['--directory'])
     if not os.path.isdir(input_directory):
         print('input directory {} does not exist.'.format(input_directory))
@@ -150,7 +143,9 @@ if __name__ == '__main__':
 
     output_directory = '/mnt/pres/{}/Tiff Crop'.format(args['--directory'])
     if not os.path.isdir(output_directory):
-        os.mkdir(output_directory)
+        print('would have created Tiff Crop.')
+        print(output_directory)
+        #os.mkdir(output_directory)
 
     testing = False
 
