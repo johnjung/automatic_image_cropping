@@ -143,25 +143,24 @@ if __name__ == '__main__':
 
     output_directory = '/mnt/pres/{}/Tiff Crop'.format(args['--directory'])
     if not os.path.isdir(output_directory):
-        print('would have created Tiff Crop.')
-        print(output_directory)
-        #os.mkdir(output_directory)
+        os.mkdir(output_directory)
 
     testing = False
-
-    sys.exit()
 
     for f in os.listdir(input_directory):
         if os.path.isfile('{}/{}'.format(output_directory, f)):
             print('Skipping {} (file exists in output directory)'.format(f))
         else:
             try:
+                print('Would have tried to crop {}'.format(f))
+                '''
                 crop_out_ruler(
                     '{}/{}'.format(input_directory, f),
                     '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation']
                 )
+                '''
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
                 continue
