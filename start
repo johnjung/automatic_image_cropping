@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 
 """Usage:
-   start [--username=<username>] [--domain=<domain>] [--password=<password>] [--directory=<directory>] [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>]
+   start [--username=<username>] [--domain=<domain>] [--password=<password>] [--directory=<directory>] [--red=<integer>] [--green=<integer>] [--blue=<integer>] [--grayvariation=<integer>] [--verbose] [--testing]
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import os
 import sys
 import textwrap
 
-def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation, verbose=False):
+def crop_out_ruler(inputfile, outputfile, ruler_color, grayvariation, verbose=False, testing=False):
     morph_open_kernel = numpy.ones((5, 5), numpy.uint8)
     morph_close_kernel = numpy.ones((20, 20), numpy.uint8)
     border_width = 100
@@ -130,7 +130,9 @@ if __name__ == '__main__':
         '--green':         'PRES_CROP_GREEN',
         '--blue':          'PRES_CROP_BLUE',
         '--grayvariation': 'PRES_CROP_GRAY_VARIATION',
-        '--directory':     'PRES_CROP_DIRECTORY'
+        '--directory':     'PRES_CROP_DIRECTORY',
+        '--testing':       'PRES_CROP_TESTING',
+        '--verbose':       'PRES_CROP_VERBOSE'
     }
 
     for a, v in args.items():
@@ -143,6 +145,14 @@ if __name__ == '__main__':
 
     for a in ('--red', '--green', '--blue', '--grayvariation'):
         args[a] = int(args[a])
+
+    for a in ('--verbose', '--testing'):
+        if args[a] in (True, 'true', 'True', 1):
+            args[a] = True
+        elif args[a] in (False, 'false', 'False', 0):
+            args[a] = False
+        else:
+            raise ValueError
 
     call([
         'mount',
@@ -163,10 +173,6 @@ if __name__ == '__main__':
     if not os.path.isdir(output_directory):
         os.mkdir(output_directory)
 
-    testing = False
-
-    verbose = True
-
     for f in os.listdir(input_directory):
         if not os.path.isfile('{}/{}'.format(output_directory, f)):
             try:
@@ -176,9 +182,9 @@ if __name__ == '__main__':
                     '{}/{}'.format(output_directory, f),
                     [args['--red'], args['--green'], args['--blue']],
                     args['--grayvariation'],
-                    verbose
+                    verbose,
+                    testing
                 )
-                sys.exit()
             except (AttributeError, ValueError):
                 print('Problem trying to crop {}'.format(f))
                 continue
