@@ -126,6 +126,9 @@ if __name__ == '__main__':
                 print('The {} environmental variable is not set.'.format(environmental_variables[a]))
                 sys.exit()
 
+    for a in ('--red', '--green', '--blue', '--grayvariation'):
+        args[a] = int(args[a])
+
     call([
         'mount',
         '-t',
