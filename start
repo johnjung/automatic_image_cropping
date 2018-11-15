@@ -36,8 +36,6 @@ def crop_out_ruler():
     except KeyError:
         return Response("{'error': 'Missing required form values'}", status=400, mimetype='application/json')
 
-    testing = 'testing' in request.form
-
     morph_open_kernel = numpy.ones((5, 5), numpy.uint8)
     morph_close_kernel = numpy.ones((20, 20), numpy.uint8)
     border_width = 100
@@ -91,9 +89,6 @@ def crop_out_ruler():
     
     if ruler is not None:
         sys.stdout.write('{} found ruler.\n'.format(get_time()))
-        # draw a box around it. 
-        if testing:
-            cv2.drawContours(img, [ruler], -1, test_color, test_width)
     
         # get x coordinates of all points in ruler, sort so the one closes to the center of the image is first.
         height, width, channels = img.shape
