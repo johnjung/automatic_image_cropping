@@ -46,6 +46,9 @@ for input_image in "${input_images[@]}"; do
   
     # request cropping data. 
     json=`curl -s -X POST -F image="@${tmp_dir}/${filename}.jpg" -F red="${red}" -F green="${green}" -F blue="${blue}" -F grayvariation="${grayvariation}" http://0.0.0.0:5000/crop`
+
+    # remove tempfile. 
+    rm "${tmp_dir}/${input_image}.jpg"
   
     if [[ "${json}" == *"success"* ]]; then
       # extract coordinates
@@ -60,9 +63,6 @@ for input_image in "${input_images[@]}"; do
   
       # crop the image.
       convert "${input_image}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_directory}/${filename}"
-
-      # remove tempfile. 
-      rm "${tmp_dir}/${input_image}.jpg"
     else
       echo "${json}"
     fi
