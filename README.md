@@ -12,9 +12,24 @@ vision library OpenCV.
 
 ## Quickstart
 
+### On your local system
+Be sure [OpenCV] (https://opencv.org) is installed on your system with the appropriate Python bindings. 
+
+```
+python3 -m venv opencv_cropping_env
+cd opencv_cropping_env
+source bin/activate
+git clone https://github.com/johnjung/opencv_cropping.git
+cd opencv_cropping
+python start
+curl -X POST -F 'image=@testimage.jpg' -F 'red=120' -F 'green=120' -F 'blue=120' -F 'grayvariation=20' http://0.0.0.0:5000/crop
+```
+
+### With Docker
 ```
 docker build -t crop https://github.com/johnjung/opencv_cropping.git
-docker run --rm -it --cap-add=SYS_ADMIN --cap-add=DAC_READ_SEARCH --env-file=envfile crop start
+docker run --rm -it crop start
+curl -X POST -F 'image=@testimage.jpg' -F 'red=120' -F 'green=120' -F 'blue=120' -F 'grayvariation=20' http://0.0.0.0:5000/crop
 ```
 
 ## Contributing
