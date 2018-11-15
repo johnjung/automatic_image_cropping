@@ -60,15 +60,11 @@ for input_image in "${input_images[@]}"; do
   
       # crop the image.
       convert "${input_image}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_directory}/${filename}"
-  
-      exit
+
+      # remove tempfile. 
+      rm "${tmp_dir}/${input_image}.jpg"
     else
       echo "${json}"
     fi
-    exit
-  
-    # remove tempfile. 
-    rm "${tmp_dir}/${input_image}.jpg"
-    exit
   fi
 done
