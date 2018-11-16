@@ -1,5 +1,4 @@
-# Set-Variable -Name "tmp_dir" -Value %TEMP%
-Set-Variable -Name "tmp_dir" -Value /tmp
+# Set-Variable -Name "tmp_dir" -Value C:/Windows/Temp
 
 Write-Host @"
 
@@ -40,11 +39,10 @@ Get-ChildItem $input_directory -Filter *.tif | Foreach-Object {
   If (Test-Path $output_filename -PathType Leaf) {
     $output_filename
 
+    $tmp_imagepath = "{0}/{1}.jpg" -f $output_directory, $_.Name
+
     # convert the file to jpeg to make processing easier on the server-side.
-    $image = [System.Drawing.Image]::FromFile($($_.FullName))
-    # alternative: $image = New-Object -ComObject Wia.ImageFile
-    $tmp_imagepath = "{0}/{1}.jpg" -f $tmp_dir, $_.BaseName
-    $image.Save($tmp_imagepath, [System.Drawing.Imaging.ImageFormat]::Jpeg)
+    & convert "${input_image}[0]" "${tmp_imagepath}"
   
     # request cropping data. 
     $postParams = @{red=$red;green=$green;blue=$blue;grayvariation=$grayvariation}
@@ -65,7 +63,7 @@ Get-ChildItem $input_directory -Filter *.tif | Foreach-Object {
       $height=`expr "${y2}" - "${y1}"`
   
       # crop the image.
-      # convert "${input_image}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_directory}/${filename}"
+      convert "${input_image}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_directory}/${filename}"
     } Else {
       $json
     }
