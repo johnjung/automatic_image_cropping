@@ -57,6 +57,13 @@ for input_image in "${input_images[@]}"; do
       y1=`echo $json | grep -o 'y1..\s*[0-9]*' | cut -d: -f2 | sed -e 's/[^0-9]//'`
       y2=`echo $json | grep -o 'y2..\s*[0-9]*' | cut -d: -f2 | sed -e 's/[^0-9]//'`
 
+      # take an extra 50 pixels off. 
+      if [[ "$x1" == "0" ]]; then
+        x2=`expr "$x2" - 50`
+      else
+        x1=`expr "$x1" + 50`
+      fi
+
       # get the width and height for ImageMagick. 
       width=`expr "${x2}" - "${x1}"`
       height=`expr "${y2}" - "${y1}"`
