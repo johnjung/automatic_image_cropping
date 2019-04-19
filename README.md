@@ -1,6 +1,4 @@
-# digital_collections_image_tools
-
-v. 0.0.1
+# Digital Collections Image Tools
 
 Libraries, museums and other organizations do digitization projects to make visual material available on the web. This repository is a placeholder for scripts to process and manage the images for those projects. 
 
