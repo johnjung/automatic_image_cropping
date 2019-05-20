@@ -41,11 +41,11 @@ $ sh test.sh <red> <green> <blue> <variation> <inputfile> <outputfile>
 In testing mode the script draws a rectangle around the image area that 
 will be left after cropping- here's a sample image-
 
-(test_image.jpg)
+(/test_image.jpg)
 
 And here is the sample image with cropping coordinates-
 
-(test_image_show_cropping_rectangle.jpg)
+(/test_image_show_cropping_rectangle.jpg)
 
 ## POST parameters
 
