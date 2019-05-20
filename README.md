@@ -6,16 +6,51 @@ The first script here uses computer vision to automatically crop color bars and 
 
 ## Quickstart
 
+First, start the OpenCV component in a Docker container:
+
 ```
 docker build -t crop https://github.com/johnjung/digital_collections_image_tools.git
 docker run --rm -it -p 5000:5000 crop start
-curl -X POST -F 'image=@test_image.jpg' -F 'red=120' -F 'green=120' -F 'blue=120' -F 'grayvariation=20' http://0.0.0.0:5000/crop
 ```
+
+Then run the cropping script itself in a separate window:
+
+```console
+$ sh crop.sh
+
+.----. .----. .----. .----.  
+| {}  }| {}  }| {_  { {__    
+| .--' | .-. \| {__ .-._} }  
+`-'    `-' `-'`----'`----'   
+ .---. .----.  .----. .----. 
+/  ___}| {}  }/  {}  \| {}  }
+\     }| .-. \\      /| .--' 
+ `---' `-' `-' `----' `-'    
+
+Welcome to the preservation cropping script.
+
+Enter input directory, e.g. /Volumes/pres/EWM/ewm-0054/Masters: 
+```
+
+The following script tests cropping settings on a specific image:
+
+```console
+$ sh test.sh <red> <green> <blue> <variation> <inputfile> <outputfile>
+```
+
+In testing mode the script draws a rectangle around the image area that 
+will be left after cropping- here's a sample image-
+
+(test_image.jpg)
+
+And here is the sample image with cropping coordinates-
+
+(test_image_show_cropping_rectangle.jpg)
 
 ## POST parameters
 
 ### image
-An image containing a ruler along one edge. (See test_image.jpg for a sample
+An image containing a ruler along one edge.
 that has been reduced in size.)
 
 ### red
