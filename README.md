@@ -47,11 +47,7 @@ And here is the sample image with a bounding box-
 
 ![sample image with bounding box](./test_image_show_cropping_rectangle.jpg)
 
-## POST parameters
-
-### image
-An image containing a ruler along one edge.
-that has been reduced in size.)
+## Parameters
 
 ### red
 In an rgb pixel describing the ruler's color, the red channel amount from
@@ -65,7 +61,7 @@ In an rgb pixel describing the ruler's color, the green channel amount from
 In an rgb pixel describing the ruler's color, the blue channel amount from
 0-255.
 
-### grayvariation
+### variation
 Fuzziness for color matching. If rgb values are 120 and grayvariation is set to
 20, the script will search for objects between 100/100/100 and 140/140/140. 
 
