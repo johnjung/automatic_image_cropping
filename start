@@ -73,7 +73,7 @@ def crop_out_ruler():
     ret, threshold = cv2.threshold(gray_only, 127, 255, cv2.THRESH_BINARY)
     
     # getting contours.
-    contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     ruler = None
     
