@@ -38,7 +38,9 @@ The following script tests cropping settings on a specific image:
 $ sh test.sh <red> <green> <blue> <variation> <inputfile> <outputfile>
 ```
 
-In testing mode the script draws a rectangle around the image area that 
+In testing mode the script draws a rectangle around the image area that
+Before you begin, make sure you have all the right packages installed (requirements.txt)
+ 
 will be left after cropping. Here's a sample image-
 
 ![sample image](./test_image.jpg)
@@ -70,6 +72,6 @@ Fuzziness for color matching. If rgb values are 120 and grayvariation is set to
 Please contact the author with pull requests, bug reports, and feature
 requests.
 
-## Author
+## Contributors
 
-John Jung
+John Jung (Author), Kevin Song

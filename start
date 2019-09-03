@@ -14,17 +14,22 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/tmp'
 
 @app.route('/crop', methods=['POST'])
-def crop_out_ruler():
-    if 'image' not in request.files:
+def crop_color_bar():
+    
+    if 'file' not in request.form or not request.form['file']:
         return Response("{'error': 'No image part'}", status=400, mimetype='application/json')
 
-    filestorage = request.files['image']
+    #if 'image' not in request.files:
+        #return Response("{'error': 'No image part'}", status=400, mimetype='application/json')
 
-    if filestorage.filename == '':
-        return Response("{'error': 'No selected file'}", status=400, mimetype='application/json')
+    filestorage = request.form['file']
+
+    #if filestorage.filename == '':
+        #return Response("{'error': 'No selected file'}", status=400, mimetype='application/json')
 
     if not (filestorage.filename.endswith('.jpg') or filestorage.filename.endswith('.tif')):
         return Response("{'error': 'Unsupported file type'}", status=400, mimetype='application/json')
+    
 
     try:
         ruler_color = [
@@ -46,6 +51,7 @@ def crop_out_ruler():
     sys.stdout.write('{} loading {}.\n'.format(get_time(), filestorage.filename))
 
     filestr = filestorage.read()
+    filestorage.close()
     npimg = numpy.fromstring(filestr, numpy.uint8)
     img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
@@ -72,12 +78,13 @@ def crop_out_ruler():
     # getting a bitonal image.
     ret, threshold = cv2.threshold(gray_only, 127, 255, cv2.THRESH_BINARY)
     
-    # getting contours.
-    _, contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # getting contours
+    # removed initial '_', as cv2 updated its return values in newest patch 
+    contours, hierarchy = cv2.findContours(threshold.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     
     ruler = None
     
-    # find the largest countour with four sides- assume it is the ruler.
+    # find the largest contour with four sides- assume it is the ruler.
     contours = sorted(contours, key = cv2.contourArea, reverse = True)[:10]
     for c in contours:
         peri = cv2.arcLength(c, True)
@@ -90,7 +97,7 @@ def crop_out_ruler():
     if ruler is not None:
         sys.stdout.write('{} found ruler.\n'.format(get_time()))
     
-        # get x coordinates of all points in ruler, sort so the one closes to the center of the image is first.
+        # get x coordinates of all points in ruler, sort so the one closest to the center of the image is first.
         height, width, channels = img.shape
         points_x_coordinates = list(map(lambda c: c[0][0], ruler.tolist()))
         points_x_coordinates = list(sorted(points_x_coordinates, key=lambda x: abs(width - x)))
@@ -109,5 +116,32 @@ def crop_out_ruler():
     else:
         sys.stdout.write('{} no ruler found.\n'.format(get_time()))
 
+
+
+@app.route('/ruler', methods=['POST'])
+def crop_ruler():
+
+    if 'file' not in request.form or not request.form['file']:
+        return Response("{'error': 'No image part'}", status=400, mimetype='application/json')
+
+    filestorage = request.form['file']
+
+    if not (filestorage.filename.endswith('.jpg') or filestorage.filename.endswith('.tif')):
+        return Response("{'error': 'Unsupported file type'}", status=400, mimetype='application/json')
+
+    try:
+        ruler_color = [
+            int(request.form['red']),
+            int(request.form['green']),
+            int(request.form['blue'])
+        ]
+        grayvariation = int(request.form['grayvariation'])
+    except KeyError:
+        return Response("{'error': 'Missing required form values'}", status=400, mimetype='application/json')
+
+    morph_open_kernel = numpy.ones((5,5), numpy.uint8)
+    morth_close_kernel = numpy.ones((20,20), numpy.uint8)
+    
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port = 25)
