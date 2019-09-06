@@ -63,11 +63,13 @@ if ($input -eq 'Y') {
   
       # convert the file to jpeg to make processing easier on the server-side.
       & magick convert $input_file ${tmp_imagepath}
-  
+
+      # cropping script for ewm files
+      If ($_.Name -like '*ewm') {
       # request cropping data. 
       $postParams = @{red=$red;green=$green;blue=$blue;grayvariation=$grayvariation;file=$tmp_imagepath}
-      $json = Invoke-RestMethod -Uri http://0.0.0.0/crop -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
-      #$json = Invoke-WebRequest -Uri http://0.0.0.0/crop -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
+      #$json = Invoke-RestMethod -Uri http://0.0.0.0/crop -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
+      $json = Invoke-WebRequest -Uri http://0.0.0.0/crop_ewm -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
       #-InFile $tmp_imagepath
   
       # remove tempfile. 
@@ -76,10 +78,10 @@ if ($input -eq 'Y') {
       #json.Name == 'success'
       If ($json.StatusCode -eq 200) {
         # extract coordinates
-        $x1=$json[0]['x1']
-        $x2=$json[0]['x2']
-        $y1=$json[0]['y1'] 
-        $y2=$json[0]['y2']
+        $x1=$json['x1'] # used to be $json[0]['x1] -- kept getting error for null arrays
+        $x2=$json['x2']
+        $y1=$json['y1'] 
+        $y2=$json['y2']
   
         # get the width and height for ImageMagick. 
         $width=`expr "${x2}" - "${x1}"`
@@ -90,6 +92,41 @@ if ($input -eq 'Y') {
       } Else {
         $json
       }
+      # cropping script for speculum files
+    } Else {
+      $postParams = @{file=$tmp_imagepath}
+      $json = Invoke-WebRequest -Uri http://0.0.0.0/crop_spec -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
+
+      Remove-Item -path $tmp_imagepath
+
+      If ($json.StatusCode -eq 200) {
+        # extract coordinates
+        $ruler_x1 = $json['ruler_x1']
+        $ruler_x2 = $json['ruler_x2']
+        $ruler_y1 = $json['ruler_y1']
+        $ruler_y2 = $json['ruler_y2']
+
+        $color_x1 = $json['color_x1']
+        $color_x2 = $json['color_x2']
+        $color_y1 = $json['color_y1']
+        $color_y2 = $json['color_y2']
+
+        # crop ruler first
+        $width = `expr "${ruler_x2}" - "${ruler_x1}"`
+        $height = `expr "${ruler_y2}" - "${ruler_y1}"`
+
+        & magick convert "${input_file}"[0] -crop  "${width}x${height}+${ruler_x1}+${ruler_y1}" -density 600 "${output_filename}"
+
+        #crop color bar
+        $width = `expr "${color_x2}" - "${color_x1}"`
+        $height = `expr "${color_y2}" - "${color_y1}"`
+
+        & magick convert "${input_file}"[0] - crop "${width}x${height}+${color_x1}+${color_y1}" -density 600 "${output_filename}"
+      }
+      Else {
+        $json
+      }
+    }
     }
   }
 } else {
@@ -104,25 +141,61 @@ if ($input -eq 'Y') {
 
       & magick convert $filePath ${tmp_imagepath}
 
-      $postParams = @{red=$red;green=$green;blue=$blue;grayvariation=$grayvariation;file=$tmp_imagepath}
-      $json = Invoke-WebRequest -Uri http://0.0.0.0/crop -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
+      # cropping script for ewm files
+      If ($filename -like '*ewm*') {
+        $postParams = @{red=$red;green=$green;blue=$blue;grayvariation=$grayvariation;file=$tmp_imagepath}
+        $json = Invoke-WebRequest -Uri http://0.0.0.0/crop_ewm -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
 
-      Remove-Item -path $tmp_imagepath
+        Remove-Item -path $tmp_imagepath
 
-      If ($json.StatusCode -eq 200) {
-        $x1=$json[0]['x1']
-        $x2=$json[0]['x2']
-        $y1=$json[0]['y1'] 
-        $y2=$json[0]['y2']
+        If ($json.StatusCode -eq 200) {
+          $x1=$json[0]['x1']
+          $x2=$json[0]['x2']
+          $y1=$json[0]['y1'] 
+          $y2=$json[0]['y2']
   
-        $width=`expr "${x2}" - "${x1}"`
-        $height=`expr "${y2}" - "${y1}"`
+          $width=`expr "${x2}" - "${x1}"`
+          $height=`expr "${y2}" - "${y1}"`
 
-        & magick convert "${filename}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_filename}"
-      } Else {
-        $json
+          & magick convert "${filename}"[0] -crop "${width}x${height}+${x1}+${y1}" -density 600 "${output_filename}"
+        } Else {
+          $json
       }
+      # cropping script for speculum files
+      } Else {
+          $postParams = @{file=$tmp_imagepath}
+          $json = Invoke-WebRequest -Uri http://0.0.0.0/crop_spec -Method POST -Body $postParams -ContentType "multipart/form-data" | ConvertFrom-Json
 
+          Remove-Item -path $tmp_imagepath
+
+          If ($json.StatusCode -eq 200) {
+            # extract coordinates
+            $ruler_x1 = $json['ruler_x1']
+            $ruler_x2 = $json['ruler_x2']
+            $ruler_y1 = $json['ruler_y1']
+            $ruler_y2 = $json['ruler_y2']
+
+            $color_x1 = $json['color_x1']
+            $color_x2 = $json['color_x2']
+            $color_y1 = $json['color_y1']
+            $color_y2 = $json['color_y2']
+
+            # crop ruler first
+            $width = `expr "${ruler_x2}" - "${ruler_x1}"`
+            $height = `expr "${ruler_y2}" - "${ruler_y1}"`
+
+            & magick convert "${filename}"[0] -crop  "${width}x${height}+${ruler_x1}+${ruler_y1}" -density 600 "${output_filename}"
+
+            #crop color bar
+            $width = `expr "${color_x2}" - "${color_x1}"`
+            $height = `expr "${color_y2}" - "${color_y1}"`
+
+            & magick convert "${filename}"[0] - crop "${width}x${height}+${color_x1}+${color_y1}" -density 600 "${output_filename}"
+          }
+          Else {
+            $json
+          }
+      }
     }
 }
 

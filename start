@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/tmp'
 
 @app.route('/crop', methods=['POST'])
-def crop_color_bar():
+def crop_ewm():
     
     if 'file' not in request.form or not request.form['file']:
         return Response("{'error': 'No image part'}", status=400, mimetype='application/json')
@@ -119,7 +119,7 @@ def crop_color_bar():
 
 
 @app.route('/ruler', methods=['POST'])
-def crop_ruler():
+def crop_spec():
 
     if 'file' not in request.form or not request.form['file']:
         return Response("{'error': 'No image part'}", status=400, mimetype='application/json')
@@ -139,8 +139,129 @@ def crop_ruler():
     except KeyError:
         return Response("{'error': 'Missing required form values'}", status=400, mimetype='application/json')
 
+    filestr = filestorage.read()
+    filestorage.close()
+    npimg = numpy.fromstring(filestr, numpy.uint8)
+    img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
     morph_open_kernel = numpy.ones((5,5), numpy.uint8)
-    morth_close_kernel = numpy.ones((20,20), numpy.uint8)
+    morph_close_kernel = numpy.ones((20,20), numpy.uint8) # adjust as needed
+
+    # selecting gray objects
+    lower_limit = numpy.array([20, 20, 20], dtype=numpy.uint8)
+    upper_limit = numpy.array([210, 210, 210], dtype=numpy.uint8)
+    gray_only = cv2.inRange(img, lower_limit, upper_limit)
+
+    # despeckling to remove noise.
+    gray_only = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, morph_open_kernel)
+
+    # filling in gaps to remove noise.
+    gray_only = cv2.morphologyEx(gray_only, cv2.MORPH_CLOSE, morth_close_kernel)
+
+    contours, hierarchy = cv2.findContours(gray_only, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
+
+    ruler = None
+    colorBar = None
+
+    # This iteration is not rigorously tested and should be generalized:
+    # First and largest contour will be the image of the drawing itself -- PASS
+    # Second contour should be the ruler itself -- WANT
+    # Third contour should be of ruler again, but with extra, irrelevant markings of ruler numbers -- PASS
+    # Fourth contour should be of the gray color bar -- WANT
+
+    
+    # A cleaner method I thought of:
+
+    # RULER 
+    checkRuler = contours[1] # I don't know if this is the correct way to isolate the second/specific contour
+    peri = cv2.arcLength(checkRuler, True)
+    approx = cv2.approxPolyDP(checkRuler, 0.02 * peri, True)
+    if len(approx) == 4:
+        ruler = numpy.array(list(approx))
+
+    # COLOR BAR
+    checkColor = contours[3] # ^^^ fourth contour, assuming
+    peri = cv2.arcLength(checkColor, True)
+    approx = cv2.approxPolyDP(checkColor, 0.02 * peri, True)
+    if len(approx) == 4:
+        colorBar = numpy.array(list(approx))
+    
+
+    '''
+    # Alternative, messier method
+
+    i = 0
+    for c in contours:
+        peri = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * peri, True)
+        if len(approx) == 4:
+            i += 1
+            if i == 1 or i == 3:
+                pass
+            elif i == 2:
+                ruler = numpy.array(list(approx)) # I did not add a border, hence no lambda
+            elif i == 4:
+                color_bar = numpy.array(list(approx)) # ^
+    '''
+
+    if ruler is not None and colorBar is not None:
+
+        height, width, channels = img.shape
+
+        # x-coordinates for ruler
+        ruler_x_coordinates = list(map(lambda c: c[0][0], ruler.tolist())) # ruler x coordinates
+        ruler_x_coordinates = list(sorted(ruler_x_coordinates, key=lambda x: abs(width - x)))
+
+        if ruler_x_coordinates[0] > width / 2:
+            ruler_x = ruler_x_coordinates[-1]
+        else:
+            ruler_x = ruler_x_coordinates[0]
+
+        # x-coordinates for colorBar
+        color_x_coordinates = list(map(lambda c: c[0][0], colorBar.tolist())) # colorBar x coordinates
+        color_x_coordinates = list(sorted(ruler_x_coordinates, key=lambda x: abs(width - x)))
+
+        if color_x_coordinates[0] > width / 2:
+            color_x = color_x_coordinates[-1]
+        else:
+            color_x = color_x_coordinates[0]
+
+        ruler_x1 = 0
+        ruler_x2 = 0
+        ruler_y1 = 0
+        ruler_y2 = 0
+
+        color_x1 = 0
+        color_x2 = 0
+        color_y1 = 0
+        color_y2 = 0
+
+        if ruler_x < width / 2:
+            ruler_x1 = x
+            ruler_x2 = width
+            ruler_y2 = height
+
+        else:
+            ruler_x2 = x
+            ruler_y2 = height
+
+        if color_x < width / 2:
+            color_x1 = x
+            color_x2 = width
+            color_y2 = height
+
+        else:
+            color_x2 = x
+            color_y2 = height
+
+        return return Response("{{'success': {{'ruler_x1': {}, 'ruler_x2': {}, 'ruler_y1': {}, 'ruler_y2': {}, 'color_x1': {}, 'color_x2': {}, 'color_y1': {}, 'color_y2': {}}}}}".format(
+            ruler_x1, ruler_x2, ruler_y1, ruler_y2, color_x1, color_x2, color_y1, color_y2), status=200, mimetype='application/json')
+
+    else:
+        return sys.stdout.write('{} no ruler or color bar found.\n'.format(get_time()))
+
     
 
 if __name__ == '__main__':
