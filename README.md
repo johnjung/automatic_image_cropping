@@ -1,15 +1,13 @@
-# Digital Collections Image Tools
+# Automatic Image Cropping
 
-Libraries, museums and other organizations do digitization projects to make visual material available on the web. This repository is a placeholder for scripts to process and manage the images for those projects. 
-
-The first script here uses computer vision to automatically crop color bars and rulers from high resolution scans. 
+This script uses computer vision to automatically crop color bars and rulers from high resolution scans. 
 
 ## Quickstart
 
 First, start the OpenCV component in a Docker container:
 
 ```
-docker build -t crop https://github.com/johnjung/digital_collections_image_tools.git
+docker build -t crop https://github.com/johnjung/automatic_image_cropping.git
 docker run --rm -it -p 5000:5000 crop start
 ```
 
